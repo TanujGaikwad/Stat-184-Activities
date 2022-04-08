@@ -6,7 +6,7 @@ library(tidyverse)
 data <- read.delim("Data_RegEx2.txt", fileEncoding = "UTF-8", header = F, quote = "")
 
 #View Data
-View(data)
+head(data)
 
 
 #Make new table with all filters and modifications
@@ -34,8 +34,20 @@ NewTable$GIR = as.numeric(gsub("[\\%]", "", NewTable$GIR))
 NewTable <- 
   mutate(NewTable, Cut = ifelse(Position == "CUT", "Missed Cut", "Made Cut"))
 
+#First Plot
 ggplot(NewTable, aes(x = Cut, y = SGTOT)) + 
   geom_boxplot(aes(color = Cut)) +
   labs(title = "Boxplot Shots Gained Total",
        y = "Shots Gained Total",
-       x  = "")
+       x  = "CUT")
+
+#INTERPRETIVE STATEMENT NEEDED
+
+#Second Plot
+ggplot(NewTable, aes(x = Cut, y = GIR)) + 
+  geom_boxplot(aes(color = Cut)) +
+  labs(title = "Boxplot Greens Hit in Regulation",
+       y = "Greens in Regulation",
+       x  = "CUT")
+
+#INTERPRETIVE STATEMENT NEEDED

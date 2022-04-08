@@ -72,4 +72,4 @@ ggplot(NewTable, aes(x = Cut, y = GIR)) +
        y = "Greens in Regulation",
        x  = "CUT")
 ```
-This graph is a representation of the 
+This graph is a representation of the amount of times players have hit the golf ball into the green. Those that "made cut" were more successful that those who "missed cut" in getting their balls on the green.
