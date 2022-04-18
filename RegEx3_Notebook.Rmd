@@ -1,0 +1,151 @@
+---
+title: "Week 13 Activity"
+author: "Tanuj Gaikwad"
+date: "April 17, 2022"
+output: html_notebook
+---
+
+### Load Packages & Data
+
+```{r warning = FALSE, message = FALSE}
+library(tidyverse, warn.conflicts = FALSE)
+
+Tennis_Data <- read.csv(file = "Data_RegEx3.csv")
+```
+
+### Create new var Year based off tourney_id
+```{r warning = FALSE, message = FALSE}
+NewTable <-
+  Tennis_Data %>%
+  mutate(year = str_extract(tourney_id, "^\\d+")) %>%
+  mutate(score_edit = score)
+
+NewTable$score_edit <- gsub("\\(\\d+)", replacement = "", NewTable$score_edit)
+NewTable$score_edit <- gsub("RET", replacement = "", NewTable$score_edit)
+
+head(NewTable)
+tail(NewTable)
+```
+
+### Separate Score into individual sets
+```{r warning = FALSE, message = FALSE}
+NewTable <-
+  NewTable %>% 
+  separate(score_edit, c("Set.1", "Set.2", "Set.3", "Set.4", "Set.5"), sep = " ")
+
+head(NewTable)
+```
+
+### Create new var setsPlayed by counting non-NA's in Sets 1-5
+```{r warning = FALSE, message = FALSE}
+NewTable2 = 
+  NewTable %>%
+  mutate(setsPlayed = rowSums(!is.na(NewTable[,8:12])))
+
+head(NewTable2)
+tail(NewTable2)
+
+NewTable2 <-
+  NewTable2 %>%
+  select(tourney_id, tourney_name, winner_ioc, winner_age, score, minutes, year, setsPlayed)
+
+NewTable2$tourney_name <- gsub("Us Open", "US Open", NewTable2$tourney_name)
+```
+
+### Graph 1: Density Plots of Minutes Played Per Number of Sets Played
+```{r warning = FALSE, message = FALSE}
+ggplot(NewTable2) +
+  aes(x = minutes, group = setsPlayed, fill = as.factor(setsPlayed), color = as.factor(setsPlayed)) +
+  geom_density() + 
+  labs(title = "Density Plots of Minutes Played Per Number of Sets Played",
+       x = "Minutes Played",
+       y = "Density",
+       fill = "Sets Played",
+       color = "Sets Played") +
+  theme(legend.position = "top")
+```
+This graph shows us how long a tennis match takes on average based on the number of sets played. There is no data for the first set because it has to be played out first to get a timing. OVerall though, you can see how the entire match takes longer and longer as there are more sets.
+
+### Graph 2: Boxplot Age of Winner in Grand Slam Events
+```{r warning = FALSE, message = FALSE}
+ggplot(NewTable2, aes(x = tourney_name, y = winner_age, color = tourney_name)) + 
+  geom_boxplot() +
+  labs(title = "Boxplot Age of Winner in Grand Slam Events",
+       x = "Tournament Name",
+       y = "Age of Winner",
+       fill = "Tournament Name",
+       color = "Tournament Name")
+```
+This graph shows how old the winners of the different Grand Slams were on average. This average age comes between 26 and 28 with no clear pattern based on which tournament.
+
+### Graph 3: Top 5 Olympic Memberships per Tournament
+```{r warning = FALSE, message = FALSE}
+NewTable3 <-
+  NewTable2 %>%
+  filter(winner_ioc %in% c("ARG","AUS","ESP","FRA","GER","ITA","USA"))
+  
+ggplot(data = NewTable3) +
+  aes(x = , y = winner_ioc ) +
+  geom_point(stat = "count", size = 2)+ 
+  coord_flip() + 
+  facet_grid(tourney_name ~ .) +
+  theme_bw()+
+  labs(title = "Top 5 Olympic Memberships per Tournament", x = "Tournaments Won", y = "Winners Olympic Membership") + 
+  xlim(100,290)
+```
+This graph shows a more diverse spread of how many tournaments players from different countries have won and this is separated based on the Grand Slam as well. As evident, the reason Spain's numbers for Roland Garros are so high (along with other Grand Slams) is thanks to Rafael Nadal and other Spanish players. 
+
+### Graph 4: Top 2 Olympic Memberships per Year
+```{r warning = FALSE, message = FALSE}
+ioc_countries2 <-c("ESP","FRA","USA")
+
+NewTable4 <- NewTable %>%
+  filter(winner_ioc %in% ioc_countries2)
+
+
+NewTable4_Vals <- NewTable4 %>%
+  group_by(year,winner_ioc) %>%
+  summarise(count = n())
+
+YearCounts <- NewTable %>%
+  group_by(year, winner_ioc) %>%
+  summarise(count = n()) %>%
+  group_by(year) %>%
+  summarise(count = max(count)) 
+
+WinnerBasedOnIOC_Year <- NewTable %>%
+  group_by(year,winner_ioc) %>%
+  summarise(count = n())
+
+
+Toppers <- WinnerBasedOnIOC_Year %>%
+  inner_join(YearCounts, by = c("year","count"))
+
+NewTable4 <- anti_join(NewTable4_Vals, Toppers , by = c("year","winner_ioc","count"))
+
+NewTable4_Vals2 <- NewTable4 %>%
+  group_by(year) %>%
+  summarise(count = max(count))
+
+RunnerUpsBasedOnIOC_Year <- NewTable4 %>%
+  inner_join(NewTable4_Vals2, by = c("year","count"))
+
+RunnerUps <- Toppers %>%
+  full_join(RunnerUpsBasedOnIOC_Year, by = c("year", "winner_ioc","count"))
+
+ggplot(data = RunnerUps) +
+  aes(x = year, y = count, group = winner_ioc, color = winner_ioc) +
+  geom_point(size = 2) + 
+  theme_bw() + 
+  labs(title = "Top 2 Olympic Memberships per Year",
+       x = "Year",
+       y = "Tournaments Won") +
+  scale_color_discrete("Olympic Membership")
+```
+
+Lastly, this graph shows us how many Grand Slams and tournaments were won by only Spain, France, and America. Based on these three nations, the graph only shows which two won the most that given year and how many they won. In 2017, it seems that both Spain and France won relatively little tournaments as compared to other years, and 2012 saw the highest number of tournament wins for France.
+
+
+
+
+
