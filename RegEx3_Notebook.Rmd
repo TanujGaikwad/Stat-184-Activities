@@ -5,6 +5,10 @@ date: "April 17, 2022"
 output: html_notebook
 ---
 
+Notebook File Link: https://github.com/TanujGaikwad/Stat-184-Activities/blob/main/RegEx3_Notebook.Rmd
+
+Github Rendered HTML: https://htmlpreview.github.io/?https://github.com/TanujGaikwad/Stat-184-Activities/blob/main/RegEx3_Notebook.nb.html
+
 ### Load Packages & Data
 
 ```{r warning = FALSE, message = FALSE}
